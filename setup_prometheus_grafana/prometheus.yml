@@ -1,0 +1,60 @@
+global:
+  scrape_interval: 30s
+  scrape_timeout: 10s
+scrape_configs:
+  - job_name: prometheus
+    scrape_interval: 30s 
+    static_configs:
+    - targets: ["localhost:9090"]
+
+  - job_name: ec2-discovery-node-exporter
+    honor_timestamps: true
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    scheme: http
+    follow_redirects: true
+    relabel_configs:
+    - source_labels: [__meta_ec2_tag_Name]
+      separator: ;
+      regex: (.*)
+      target_label: name
+      replacement: $1
+      action: replace
+    - source_labels: [__meta_ec2_public_ip]
+      separator: ;
+      regex: (.*)
+      target_label: instance
+      replacement: $1
+      action: replace
+    - source_labels: [__meta_ec2_public_ip]
+      replacement: ${1}:9100
+      target_label: __address__
+    # - source_labels: [__meta_ec2_tag_Service]
+    #   separator: ;
+    #   regex: (.*)
+    #   target_label: group
+    #   replacement: $1
+    #   action: replace
+    # - source_labels: [__meta_ec2_tag_Prometheus]
+    #   separator: ;
+    #   regex: (.*)
+    #   target_label: Prometheus
+    #   replacement: $1
+    #   action: replace
+    # - source_labels: [__meta_ec2_tag_Project]
+    #   separator: ;
+    #   regex: (.*)
+    #   target_label: Project
+    #   replacement: $1
+    #   action: replace
+    ec2_sd_configs:
+    - endpoint: ""
+      region: ap-southeast-1
+      refresh_interval: 30s
+      port: 9100
+      filters:
+      - name: tag:Prometheus
+        values:
+        - Enable
+
